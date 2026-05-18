@@ -65,7 +65,9 @@ export function FeedUsageForm({
                 className="w-full h-12 text-base"
                 aria-invalid={!!errors.feedStockId}
               >
-                <SelectValue placeholder="Pilih jenis pakan" />
+                <SelectValue placeholder="Pilih jenis pakan">
+                  {feedStocks.find((s) => s.id === field.value)?.name}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {feedStocks.map((stock) => (
@@ -96,7 +98,9 @@ export function FeedUsageForm({
                 className="w-full h-12 text-base"
                 aria-invalid={!!errors.coopId}
               >
-                <SelectValue placeholder="Pilih kandang" />
+                <SelectValue placeholder="Pilih kandang">
+                  {coops.find((c) => c.id === field.value)?.name}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {coops.map((coop) => (

@@ -48,9 +48,11 @@ export function VaccinationForm({
           name="coopId"
           control={control}
           render={({ field }) => (
-            <Select value={field.value} onValueChange={field.onChange}>
+            <Select value={field.value ?? ""} onValueChange={field.onChange}>
               <SelectTrigger id="coopId" className="h-11 w-full text-base">
-                <SelectValue placeholder="Pilih kandang" />
+                <SelectValue placeholder="Pilih kandang">
+                  {coops.find((c) => c.id === field.value)?.name}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {coops.map((coop) => (

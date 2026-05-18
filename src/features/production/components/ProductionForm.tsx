@@ -81,7 +81,9 @@ export function ProductionForm({
                 className="w-full h-11 text-base"
                 aria-invalid={!!errors.coopId}
               >
-                <SelectValue placeholder="Pilih kandang..." />
+                <SelectValue placeholder="Pilih kandang...">
+                  {coops.find((c) => c.id === field.value)?.name}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {coops.map((coop) => (

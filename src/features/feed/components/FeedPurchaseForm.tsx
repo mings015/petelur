@@ -58,7 +58,9 @@ export function FeedPurchaseForm({
                 className="w-full h-12 text-base"
                 aria-invalid={!!errors.feedStockId}
               >
-                <SelectValue placeholder="Pilih jenis pakan" />
+                <SelectValue placeholder="Pilih jenis pakan">
+                  {feedStocks.find((s) => s.id === field.value)?.name}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {feedStocks.map((stock) => (

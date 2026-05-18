@@ -98,7 +98,9 @@ export function NewPopulationForm({ coopId }: NewPopulationFormProps) {
                 className="w-full h-12 text-base"
                 aria-invalid={!!errors.type}
               >
-                <SelectValue placeholder="Pilih jenis perubahan" />
+                <SelectValue placeholder="Pilih jenis perubahan">
+                  {field.value ? typeLabels[field.value as PopulationFormInput["type"]] : undefined}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {(Object.entries(typeLabels) as [PopulationFormInput["type"], string][]).map(
