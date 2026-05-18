@@ -1,10 +1,13 @@
+import { cache } from "react";
 import { createClient } from "./server";
 import { db } from "@/lib/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import type { UserRole } from "@/types";
 
-export async function getSession() {
+// cache() deduplicates calls within a single server request lifecycle.
+// If multiple components/actions call getSession() in the same request, only 1 network call is made.
+export const getSession = cache(async () => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -12,9 +15,9 @@ export async function getSession() {
   } = await supabase.auth.getUser();
   if (error || !user) return null;
   return user;
-}
+});
 
-export async function getCurrentUser() {
+export const getCurrentUser = cache(async () => {
   const authUser = await getSession();
   if (!authUser) return null;
 
@@ -25,7 +28,7 @@ export async function getCurrentUser() {
     .limit(1);
 
   return user ?? null;
-}
+});
 
 export async function requireRole(role: UserRole) {
   const user = await getCurrentUser();

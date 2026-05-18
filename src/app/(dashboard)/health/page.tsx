@@ -13,24 +13,24 @@ export default async function HealthPage() {
   ]);
 
   return (
-    <div className="space-y-6 p-4 md:p-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="p-4 md:p-6 space-y-6">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Kesehatan Ayam</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-xl font-semibold">Kesehatan Ayam</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
             Pantau kondisi kesehatan dan jadwal vaksinasi
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 shrink-0">
           <Link
             href="/health/vaccination/new"
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "h-10")}
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5")}
           >
             + Jadwal Vaksin
           </Link>
           <Link
             href="/health/new"
-            className={cn(buttonVariants({ size: "sm" }), "h-10")}
+            className={cn(buttonVariants({ size: "sm" }), "gap-1.5")}
           >
             + Catat Kesehatan
           </Link>
@@ -39,8 +39,8 @@ export default async function HealthPage() {
 
       {pendingVaccinations.length > 0 && (
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Jadwal Vaksinasi Mendatang</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Jadwal Vaksinasi Mendatang</CardTitle>
           </CardHeader>
           <CardContent>
             <VaccinationList schedules={pendingVaccinations} />
@@ -49,8 +49,8 @@ export default async function HealthPage() {
       )}
 
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Riwayat Catatan Kesehatan</CardTitle>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">Riwayat Catatan Kesehatan</CardTitle>
         </CardHeader>
         <CardContent>
           <HealthTable data={records} />

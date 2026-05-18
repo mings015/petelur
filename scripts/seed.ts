@@ -30,6 +30,12 @@ import {
   feedTransactions,
   healthRecords,
   vaccinationSchedules,
+  customers,
+  eggCategories,
+  eggSales,
+  expenseCategories,
+  expenses,
+  incomes,
 } from "../src/db/schema";
 
 // ─── DB & Supabase clients ────────────────────────────────────────────────────
@@ -520,6 +526,161 @@ async function seedVaccinations(
   console.log("  ✓ 2 vaksinasi selesai + 3 jadwal mendatang dibuat");
 }
 
+// ─── Seed sales data ──────────────────────────────────────────────────────────
+
+async function seedSalesData(ownerId: string) {
+  console.log("→ Membuat data penjualan & keuangan...");
+
+  // Egg categories
+  const insertedEggCats = await db
+    .insert(eggCategories)
+    .values([
+      { name: "Telur Besar", unit: "butir", sortOrder: 1, createdBy: ownerId },
+      { name: "Telur Kecil", unit: "butir", sortOrder: 2, createdBy: ownerId },
+      { name: "Telur Retak", unit: "butir", sortOrder: 3, createdBy: ownerId },
+      { name: "Telur Curah", unit: "kg", sortOrder: 4, createdBy: ownerId },
+    ])
+    .onConflictDoNothing()
+    .returning({ id: eggCategories.id, name: eggCategories.name, unit: eggCategories.unit });
+
+  // Fetch if already existed
+  const allEggCats = insertedEggCats.length > 0
+    ? insertedEggCats
+    : await db.select({ id: eggCategories.id, name: eggCategories.name, unit: eggCategories.unit }).from(eggCategories);
+
+  // Expense categories
+  await db
+    .insert(expenseCategories)
+    .values([
+      { name: "Pakan", sortOrder: 1, createdBy: ownerId },
+      { name: "Obat", sortOrder: 2, createdBy: ownerId },
+      { name: "Listrik", sortOrder: 3, createdBy: ownerId },
+      { name: "Operasional", sortOrder: 4, createdBy: ownerId },
+    ])
+    .onConflictDoNothing();
+
+  const allExpCats = await db
+    .select({ id: expenseCategories.id, name: expenseCategories.name })
+    .from(expenseCategories);
+
+  // Customers
+  const insertedCustomers = await db
+    .insert(customers)
+    .values([
+      { name: "Pak Hendra", phone: "081234567890", address: "Jl. Pasar Lama No.5", createdBy: ownerId, updatedBy: ownerId },
+      { name: "Bu Sari", phone: "085678901234", createdBy: ownerId, updatedBy: ownerId },
+      { name: "Toko Maju Jaya", phone: "021-5551234", address: "Jl. Raya Ciawi No.12", createdBy: ownerId, updatedBy: ownerId },
+    ])
+    .onConflictDoNothing()
+    .returning({ id: customers.id, name: customers.name });
+
+  const allCustomers = insertedCustomers.length > 0
+    ? insertedCustomers
+    : await db.select({ id: customers.id, name: customers.name }).from(customers);
+
+  const catBesar = allEggCats.find((c) => c.name === "Telur Besar")!;
+  const catKecil = allEggCats.find((c) => c.name === "Telur Kecil")!;
+  const catRetak = allEggCats.find((c) => c.name === "Telur Retak")!;
+  const catCurah = allEggCats.find((c) => c.name === "Telur Curah")!;
+
+  const catPakan = allExpCats.find((c) => c.name === "Pakan")!;
+  const catObat = allExpCats.find((c) => c.name === "Obat")!;
+  const catListrik = allExpCats.find((c) => c.name === "Listrik")!;
+  const catOperasional = allExpCats.find((c) => c.name === "Operasional")!;
+
+  // Egg sales (~20 transactions over last 30 days)
+  const saleRows = [
+    { daysAgoN: 29, cat: catBesar, qty: 400, price: 2000, custIdx: 0 },
+    { daysAgoN: 27, cat: catKecil, qty: 200, price: 1600, custIdx: 1 },
+    { daysAgoN: 25, cat: catBesar, qty: 350, price: 2000, custIdx: 2 },
+    { daysAgoN: 23, cat: catRetak, qty: 150, price: 1200, custIdx: 0 },
+    { daysAgoN: 21, cat: catCurah, qty: 10,  price: 18000, custIdx: 1 },
+    { daysAgoN: 19, cat: catBesar, qty: 500, price: 2100, custIdx: 2 },
+    { daysAgoN: 17, cat: catKecil, qty: 300, price: 1600, custIdx: 0 },
+    { daysAgoN: 15, cat: catBesar, qty: 420, price: 2100, custIdx: 1 },
+    { daysAgoN: 13, cat: catRetak, qty: 100, price: 1200, custIdx: null },
+    { daysAgoN: 12, cat: catCurah, qty: 15,  price: 18500, custIdx: 2 },
+    { daysAgoN: 10, cat: catBesar, qty: 380, price: 2100, custIdx: 0 },
+    { daysAgoN: 9,  cat: catKecil, qty: 250, price: 1700, custIdx: 1 },
+    { daysAgoN: 7,  cat: catBesar, qty: 460, price: 2200, custIdx: 2 },
+    { daysAgoN: 6,  cat: catCurah, qty: 12,  price: 18500, custIdx: null },
+    { daysAgoN: 5,  cat: catKecil, qty: 180, price: 1700, custIdx: 0 },
+    { daysAgoN: 4,  cat: catBesar, qty: 500, price: 2200, custIdx: 1 },
+    { daysAgoN: 3,  cat: catRetak, qty: 200, price: 1300, custIdx: 2 },
+    { daysAgoN: 2,  cat: catBesar, qty: 400, price: 2200, custIdx: 0 },
+    { daysAgoN: 1,  cat: catKecil, qty: 300, price: 1700, custIdx: null },
+    { daysAgoN: 0,  cat: catBesar, qty: 350, price: 2200, custIdx: 1 },
+  ];
+
+  for (const row of saleRows) {
+    const totalAmount = (row.qty * row.price).toFixed(2);
+    const customerId = row.custIdx !== null ? (allCustomers[row.custIdx]?.id ?? null) : null;
+    const saleDate = daysAgo(row.daysAgoN);
+
+    const [sale] = await db
+      .insert(eggSales)
+      .values({
+        saleDate,
+        customerId,
+        eggCategoryId: row.cat.id,
+        quantity: String(row.qty),
+        unit: row.cat.unit,
+        pricePerUnit: String(row.price),
+        totalAmount,
+        createdBy: ownerId,
+        updatedBy: ownerId,
+      })
+      .returning({ id: eggSales.id });
+
+    await db.insert(incomes).values({
+      incomeDate: saleDate,
+      type: "egg_sale",
+      sourceId: sale!.id,
+      description: `Penjualan ${row.cat.name}`,
+      amount: totalAmount,
+      paymentMethod: row.custIdx !== null ? "transfer" : "tunai",
+      createdBy: ownerId,
+      updatedBy: ownerId,
+    });
+  }
+
+  // Expenses (~15 transactions over last 30 days)
+  const expenseRows = [
+    { daysAgoN: 28, cat: catPakan, amount: 3750000, desc: "Pembelian pakan layer 500kg" },
+    { daysAgoN: 26, cat: catOperasional, amount: 150000, desc: "Beli sekam kandang" },
+    { daysAgoN: 22, cat: catObat, amount: 280000, desc: "Antibiotik & vitamin" },
+    { daysAgoN: 20, cat: catListrik, amount: 450000, desc: "Tagihan listrik bulan ini" },
+    { daysAgoN: 18, cat: catPakan, amount: 2250000, desc: "Pembelian pakan layer 300kg" },
+    { daysAgoN: 16, cat: catOperasional, amount: 200000, desc: "Perbaikan kandang C1" },
+    { daysAgoN: 14, cat: catObat, amount: 120000, desc: "Desinfektan kandang" },
+    { daysAgoN: 11, cat: catPakan, amount: 1200000, desc: "Pembelian konsentrat protein" },
+    { daysAgoN: 8,  cat: catOperasional, amount: 75000, desc: "Alat kebersihan" },
+    { daysAgoN: 6,  cat: catObat, amount: 180000, desc: "Vaksin ND batch baru" },
+    { daysAgoN: 5,  cat: catPakan, amount: 750000, desc: "Pakan suplemen mineral" },
+    { daysAgoN: 3,  cat: catListrik, amount: 50000, desc: "Bensin genset" },
+    { daysAgoN: 2,  cat: catOperasional, amount: 100000, desc: "Upah harian pekerja tambahan" },
+    { daysAgoN: 1,  cat: catObat, amount: 95000, desc: "Obat cacing" },
+    { daysAgoN: 0,  cat: catPakan, amount: 525000, desc: "Pakan jagung giling" },
+  ];
+
+  for (const row of expenseRows) {
+    await db.insert(expenses).values({
+      expenseDate: daysAgo(row.daysAgoN),
+      categoryId: row.cat.id,
+      amount: String(row.amount),
+      paymentMethod: row.daysAgoN % 2 === 0 ? "transfer" : "tunai",
+      description: row.desc,
+      createdBy: ownerId,
+      updatedBy: ownerId,
+    });
+  }
+
+  console.log(`  ✓ 4 kategori telur + 4 kategori pengeluaran`);
+  console.log(`  ✓ ${allCustomers.length} pelanggan`);
+  console.log(`  ✓ ${saleRows.length} transaksi penjualan + income otomatis`);
+  console.log(`  ✓ ${expenseRows.length} transaksi pengeluaran`);
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -533,6 +694,7 @@ async function main() {
     await seedFeed(coopList, ownerId);
     await seedHealthRecords(coopList, ownerId);
     await seedVaccinations(coopList, ownerId);
+    await seedSalesData(ownerId);
 
     console.log("\n✅ Seeding selesai!\n");
     console.log("─────────────────────────────────────");

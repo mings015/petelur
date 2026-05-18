@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus, Egg } from "lucide-react";
+import { Plus } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ProductionTable } from "@/features/production/components/ProductionTable";
@@ -20,38 +20,36 @@ export default async function ProductionPage() {
   }));
 
   return (
-    <div className="p-4 md:p-6 space-y-6 max-w-5xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Egg className="size-6 text-primary" />
-          <h1 className="text-xl font-bold">Produksi Telur</h1>
+    <div className="p-4 md:p-6 space-y-6">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-semibold">Produksi Telur</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Riwayat pencatatan produksi harian
+          </p>
         </div>
         <Link
           href="/production/new"
-          className={cn(buttonVariants({ size: "sm" }), "gap-1.5")}
+          className={cn(buttonVariants({ size: "sm" }), "gap-1.5 shrink-0")}
         >
-          <Plus className="size-4" />
+          <Plus className="size-3.5" />
           Input Produksi
         </Link>
       </div>
 
-      {/* Table card */}
       <Card>
-        <CardHeader className="border-b">
-          <CardTitle>Riwayat Produksi</CardTitle>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">Riwayat Produksi</CardTitle>
         </CardHeader>
-        <CardContent className="pt-4">
+        <CardContent>
           {tableData.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 gap-3 text-muted-foreground">
-              <Egg className="size-10 opacity-30" />
-              <p className="text-sm">Belum ada data produksi</p>
+              <p className="text-sm">Belum ada data produksi.</p>
               <Link
                 href="/production/new"
-                className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5")}
+                className={cn(buttonVariants({ variant: "link", size: "sm" }))}
               >
-                <Plus className="size-4" />
-                Input Produksi Pertama
+                Input produksi pertama
               </Link>
             </div>
           ) : (

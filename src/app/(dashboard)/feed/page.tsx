@@ -21,23 +21,22 @@ export default async function FeedPage() {
             Pantau stok dan transaksi pakan ternak
           </p>
         </div>
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-3">
-        <Link
-          href="/feed/usage/new"
-          className={cn(buttonVariants(), "h-11 flex-1 sm:flex-none gap-2")}
-        >
-          <Wheat className="size-4" />
-          + Catat Pemakaian
-        </Link>
-        <Link
-          href="/feed/purchase/new"
-          className={cn(buttonVariants({ variant: "outline" }), "h-11 flex-1 sm:flex-none gap-2")}
-        >
-          <ShoppingCart className="size-4" />
-          + Beli Pakan
-        </Link>
+        <div className="flex gap-2 shrink-0">
+          <Link
+            href="/feed/usage/new"
+            className={cn(buttonVariants({ size: "sm" }), "gap-1.5")}
+          >
+            <Wheat className="size-3.5" />
+            Catat Pemakaian
+          </Link>
+          <Link
+            href="/feed/purchase/new"
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5")}
+          >
+            <ShoppingCart className="size-3.5" />
+            Beli Pakan
+          </Link>
+        </div>
       </div>
 
       {lowStockFeeds.length > 0 && (
@@ -54,7 +53,7 @@ export default async function FeedPage() {
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-medium">Stok Pakan</h2>
+          <h2 className="text-sm font-medium text-muted-foreground">Stok Pakan</h2>
           <Link
             href="/feed/stocks/new"
             className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1")}

@@ -8,6 +8,8 @@ import {
   Egg,
   Wheat,
   HeartPulse,
+  ShoppingCart,
+  Wallet,
   LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -21,6 +23,8 @@ const navItems = [
   { href: "/production", label: "Produksi Telur", icon: Egg },
   { href: "/feed", label: "Manajemen Pakan", icon: Wheat },
   { href: "/health", label: "Kesehatan Ayam", icon: HeartPulse },
+  { href: "/sales", label: "Penjualan", icon: ShoppingCart, mobileHidden: true },
+  { href: "/finance", label: "Keuangan", icon: Wallet, mobileHidden: true },
 ];
 
 interface SidebarNavProps {
@@ -87,7 +91,7 @@ export function MobileNav({ user }: SidebarNavProps) {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 flex bg-card border-t md:hidden">
-      {navItems.map(({ href, label, icon: Icon }) => (
+      {navItems.filter((item) => !item.mobileHidden).map(({ href, label, icon: Icon }) => (
         <Link
           key={href}
           href={href}

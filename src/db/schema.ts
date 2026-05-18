@@ -8,6 +8,8 @@ import {
   pgEnum,
   numeric,
   date,
+  boolean,
+  index,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -29,6 +31,8 @@ export const feedTransactionTypeEnum = pgEnum("feed_transaction_type", [
   "purchase",
   "usage",
 ]);
+export const paymentMethodEnum = pgEnum("payment_method", ["tunai", "transfer"]);
+export const incomeTypeEnum = pgEnum("income_type", ["egg_sale", "manual"]);
 
 // ─── Audit helper ─────────────────────────────────────────────────────────────
 
@@ -68,7 +72,9 @@ export const coops = pgTable("coops", {
   status: coopStatusEnum("status").notNull().default("active"),
   notes: text("notes"),
   ...auditFields,
-});
+}, (t) => [
+  index("idx_coops_status").on(t.status),
+]);
 
 export const coopPopulations = pgTable("coop_populations", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -84,7 +90,10 @@ export const coopPopulations = pgTable("coop_populations", {
     .notNull()
     .defaultNow(),
   createdBy: uuid("created_by").notNull(),
-});
+}, (t) => [
+  index("idx_coop_populations_coop_id").on(t.coopId),
+  index("idx_coop_populations_date").on(t.date),
+]);
 
 export const eggProductions = pgTable("egg_productions", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -101,7 +110,10 @@ export const eggProductions = pgTable("egg_productions", {
   weightKg: numeric("weight_kg", { precision: 8, scale: 2 }),
   notes: text("notes"),
   ...auditFields,
-});
+}, (t) => [
+  index("idx_egg_productions_coop_id").on(t.coopId),
+  index("idx_egg_productions_date").on(t.productionDate),
+]);
 
 export const feedStocks = pgTable("feed_stocks", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -134,7 +146,10 @@ export const feedTransactions = pgTable("feed_transactions", {
     .notNull()
     .defaultNow(),
   createdBy: uuid("created_by").notNull(),
-});
+}, (t) => [
+  index("idx_feed_transactions_stock_id").on(t.feedStockId),
+  index("idx_feed_transactions_date").on(t.date),
+]);
 
 export const healthRecords = pgTable("health_records", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -147,7 +162,10 @@ export const healthRecords = pgTable("health_records", {
   treatment: varchar("treatment", { length: 255 }),
   notes: text("notes"),
   ...auditFields,
-});
+}, (t) => [
+  index("idx_health_records_coop_id").on(t.coopId),
+  index("idx_health_records_date").on(t.recordDate),
+]);
 
 export const vaccinationSchedules = pgTable("vaccination_schedules", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -162,7 +180,88 @@ export const vaccinationSchedules = pgTable("vaccination_schedules", {
     .notNull()
     .defaultNow(),
   createdBy: uuid("created_by").notNull(),
+}, (t) => [
+  index("idx_vaccination_coop_id").on(t.coopId),
+  index("idx_vaccination_scheduled_date").on(t.scheduledDate),
+]);
+
+export const customers = pgTable("customers", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 30 }),
+  address: text("address"),
+  notes: text("notes"),
+  ...auditFields,
 });
+
+export const eggCategories = pgTable("egg_categories", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  unit: varchar("unit", { length: 20 }).notNull().default("butir"),
+  isActive: boolean("is_active").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  createdBy: uuid("created_by").notNull(),
+});
+
+export const eggSales = pgTable("egg_sales", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  saleDate: date("sale_date").notNull(),
+  customerId: uuid("customer_id").references(() => customers.id, { onDelete: "set null" }),
+  eggCategoryId: uuid("egg_category_id")
+    .notNull()
+    .references(() => eggCategories.id, { onDelete: "restrict" }),
+  quantity: numeric("quantity", { precision: 10, scale: 2 }).notNull(),
+  unit: varchar("unit", { length: 20 }).notNull().default("butir"),
+  pricePerUnit: numeric("price_per_unit", { precision: 15, scale: 2 }).notNull(),
+  totalAmount: numeric("total_amount", { precision: 15, scale: 2 }).notNull(),
+  notes: text("notes"),
+  ...auditFields,
+}, (t) => [
+  index("idx_egg_sales_date").on(t.saleDate),
+  index("idx_egg_sales_customer_id").on(t.customerId),
+  index("idx_egg_sales_category_id").on(t.eggCategoryId),
+]);
+
+export const expenseCategories = pgTable("expense_categories", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  isActive: boolean("is_active").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  createdBy: uuid("created_by").notNull(),
+});
+
+export const expenses = pgTable("expenses", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  expenseDate: date("expense_date").notNull(),
+  categoryId: uuid("category_id")
+    .notNull()
+    .references(() => expenseCategories.id, { onDelete: "restrict" }),
+  amount: numeric("amount", { precision: 15, scale: 2 }).notNull(),
+  paymentMethod: paymentMethodEnum("payment_method").notNull().default("tunai"),
+  description: varchar("description", { length: 255 }),
+  notes: text("notes"),
+  ...auditFields,
+}, (t) => [
+  index("idx_expenses_date").on(t.expenseDate),
+  index("idx_expenses_category_id").on(t.categoryId),
+]);
+
+export const incomes = pgTable("incomes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  incomeDate: date("income_date").notNull(),
+  type: incomeTypeEnum("type").notNull(),
+  sourceId: uuid("source_id"),
+  description: varchar("description", { length: 255 }).notNull(),
+  amount: numeric("amount", { precision: 15, scale: 2 }).notNull(),
+  paymentMethod: paymentMethodEnum("payment_method").notNull().default("tunai"),
+  notes: text("notes"),
+  ...auditFields,
+}, (t) => [
+  index("idx_incomes_date").on(t.incomeDate),
+  index("idx_incomes_source_id").on(t.sourceId),
+]);
 
 // ─── Relations ────────────────────────────────────────────────────────────────
 
@@ -219,3 +318,33 @@ export const vaccinationSchedulesRelations = relations(
     }),
   }),
 );
+
+export const customersRelations = relations(customers, ({ many }) => ({
+  eggSales: many(eggSales),
+}));
+
+export const eggCategoriesRelations = relations(eggCategories, ({ many }) => ({
+  eggSales: many(eggSales),
+}));
+
+export const eggSalesRelations = relations(eggSales, ({ one }) => ({
+  customer: one(customers, {
+    fields: [eggSales.customerId],
+    references: [customers.id],
+  }),
+  eggCategory: one(eggCategories, {
+    fields: [eggSales.eggCategoryId],
+    references: [eggCategories.id],
+  }),
+}));
+
+export const expenseCategoriesRelations = relations(expenseCategories, ({ many }) => ({
+  expenses: many(expenses),
+}));
+
+export const expensesRelations = relations(expenses, ({ one }) => ({
+  category: one(expenseCategories, {
+    fields: [expenses.categoryId],
+    references: [expenseCategories.id],
+  }),
+}));

@@ -25,9 +25,12 @@ export async function middleware(request: NextRequest) {
     },
   );
 
+  // getSession() decodes JWT locally — no network call, sufficient for redirect checks.
+  // Actual auth decisions (requireRole) still use getUser() with server validation.
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
 
   const isAuthRoute = request.nextUrl.pathname.startsWith("/login");
 
