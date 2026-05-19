@@ -37,3 +37,11 @@ export async function requireRole(role: UserRole) {
   }
   return user;
 }
+
+export async function requireAnyRole(roles: UserRole[]) {
+  const user = await getCurrentUser();
+  if (!user || !roles.includes(user.role)) {
+    throw new Error("Unauthorized");
+  }
+  return user;
+}

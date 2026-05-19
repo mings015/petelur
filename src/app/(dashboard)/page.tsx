@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { db } from "@/lib/db";
-import { coops, eggProductions, feedStocks, healthRecords, eggSales, expenses, incomes } from "@/db/schema";
+import { coops, eggProductions, feedStocks, healthRecords, expenses, incomes } from "@/db/schema";
 import { eq, sql, gte, desc, and, lte } from "drizzle-orm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,11 +9,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Home, Egg, Wheat, AlertTriangle, ShoppingCart, TrendingDown, Wallet } from "lucide-react";
 import { DashboardCharts } from "./charts";
 import { formatRupiah } from "@/lib/utils";
+import { getCurrentUser } from "@/lib/supabase/auth";
+import { getTodayChecklistSummary } from "@/features/employees/task-queries";
+import { ChecklistSummaryCard } from "@/features/employees/components/ChecklistSummaryCard";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-async function getDashboardData() {
+async function getDashboardData(isOwner: boolean) {
   const today = new Date().toISOString().split("T")[0]!;
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
     .toISOString()
@@ -26,16 +29,7 @@ async function getDashboardData() {
     .toISOString()
     .split("T")[0]!;
 
-  const [
-    totalChickens,
-    todayEggs,
-    lowStockFeeds,
-    todayMortality,
-    productionChart,
-    activeCoops,
-    monthlyRevenue,
-    monthlyExpense,
-  ] = await Promise.all([
+  const baseQueries = [
     db
       .select({ total: sql<number>`COALESCE(SUM(chicken_count), 0)` })
       .from(coops)
@@ -76,30 +70,46 @@ async function getDashboardData() {
       .where(eq(coops.status, "active"))
       .orderBy(desc(coops.chickenCount))
       .limit(5),
+  ] as const;
 
-    db
-      .select({ total: sql<number>`COALESCE(SUM(${incomes.amount}), 0)` })
-      .from(incomes)
-      .where(and(gte(incomes.incomeDate, monthStart), lte(incomes.incomeDate, today)))
-      .then((r) => Number(r[0]?.total ?? 0)),
+  const financeQueries = isOwner
+    ? [
+        db
+          .select({ total: sql<number>`COALESCE(SUM(${incomes.amount}), 0)` })
+          .from(incomes)
+          .where(and(gte(incomes.incomeDate, monthStart), lte(incomes.incomeDate, today)))
+          .then((r) => Number(r[0]?.total ?? 0)),
+        db
+          .select({ total: sql<number>`COALESCE(SUM(${expenses.amount}), 0)` })
+          .from(expenses)
+          .where(and(gte(expenses.expenseDate, monthStart), lte(expenses.expenseDate, today)))
+          .then((r) => Number(r[0]?.total ?? 0)),
+      ]
+    : [];
 
-    db
-      .select({ total: sql<number>`COALESCE(SUM(${expenses.amount}), 0)` })
-      .from(expenses)
-      .where(and(gte(expenses.expenseDate, monthStart), lte(expenses.expenseDate, today)))
-      .then((r) => Number(r[0]?.total ?? 0)),
-  ]);
-
-  return {
+  const [
     totalChickens,
     todayEggs,
     lowStockFeeds,
     todayMortality,
-    productionChart: productionChart.map((r) => ({
+    productionChart,
+    activeCoops,
+    ...financeResults
+  ] = await Promise.all([...baseQueries, ...financeQueries]);
+
+  const monthlyRevenue = isOwner ? (financeResults[0] as number) : 0;
+  const monthlyExpense = isOwner ? (financeResults[1] as number) : 0;
+
+  return {
+    totalChickens: totalChickens as number,
+    todayEggs: todayEggs as number,
+    lowStockFeeds: lowStockFeeds as { id: string; name: string }[],
+    todayMortality: todayMortality as number,
+    productionChart: (productionChart as { date: string; totalEggs: number }[]).map((r) => ({
       date: r.date,
       totalEggs: Number(r.totalEggs),
     })),
-    activeCoops,
+    activeCoops: activeCoops as typeof coops.$inferSelect[],
     monthlyRevenue,
     monthlyExpense,
     netProfit: monthlyRevenue - monthlyExpense,
@@ -107,7 +117,13 @@ async function getDashboardData() {
 }
 
 export default async function DashboardPage() {
-  const data = await getDashboardData();
+  const user = await getCurrentUser();
+  const isOwner = user?.role === "owner";
+
+  const [data, checklistSummary] = await Promise.all([
+    getDashboardData(isOwner),
+    user ? getTodayChecklistSummary(user.id) : Promise.resolve({ total: 0, done: 0 }),
+  ]);
 
   return (
     <div className="p-4 md:p-6 space-y-6">
@@ -202,58 +218,63 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Keuangan KPIs */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-medium text-muted-foreground">Keuangan Bulan Ini</h2>
-          <Link href="/finance" className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "text-xs h-7 px-2")}>
-            Lihat detail →
-          </Link>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <Card className="border-emerald-200 dark:border-emerald-800">
-            <CardHeader className="flex flex-row items-center justify-between pb-1 pt-4 px-4">
-              <CardTitle className="text-xs font-medium text-muted-foreground">Pemasukan</CardTitle>
-              <ShoppingCart className="w-4 h-4 text-emerald-500" />
-            </CardHeader>
-            <CardContent className="px-4 pb-4">
-              <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
-                {formatRupiah(data.monthlyRevenue)}
-              </p>
-            </CardContent>
-          </Card>
+      {/* Checklist Summary */}
+      <ChecklistSummaryCard total={checklistSummary.total} done={checklistSummary.done} />
 
-          <Card className="border-rose-200 dark:border-rose-800">
-            <CardHeader className="flex flex-row items-center justify-between pb-1 pt-4 px-4">
-              <CardTitle className="text-xs font-medium text-muted-foreground">Pengeluaran</CardTitle>
-              <TrendingDown className="w-4 h-4 text-rose-500" />
-            </CardHeader>
-            <CardContent className="px-4 pb-4">
-              <p className="text-xl font-bold text-rose-600 dark:text-rose-400">
-                {formatRupiah(data.monthlyExpense)}
-              </p>
-            </CardContent>
-          </Card>
+      {/* Keuangan KPIs — owner only */}
+      {isOwner && (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-medium text-muted-foreground">Keuangan Bulan Ini</h2>
+            <Link href="/finance" className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "text-xs h-7 px-2")}>
+              Lihat detail →
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <Card className="border-emerald-200 dark:border-emerald-800">
+              <CardHeader className="flex flex-row items-center justify-between pb-1 pt-4 px-4">
+                <CardTitle className="text-xs font-medium text-muted-foreground">Pemasukan</CardTitle>
+                <ShoppingCart className="w-4 h-4 text-emerald-500" />
+              </CardHeader>
+              <CardContent className="px-4 pb-4">
+                <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                  {formatRupiah(data.monthlyRevenue)}
+                </p>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-1 pt-4 px-4">
-              <CardTitle className="text-xs font-medium text-muted-foreground">Laba Bersih</CardTitle>
-              <Wallet className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent className="px-4 pb-4">
-              <p className={cn("text-xl font-bold", data.netProfit >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
-                {formatRupiah(data.netProfit)}
-              </p>
-            </CardContent>
-          </Card>
+            <Card className="border-rose-200 dark:border-rose-800">
+              <CardHeader className="flex flex-row items-center justify-between pb-1 pt-4 px-4">
+                <CardTitle className="text-xs font-medium text-muted-foreground">Pengeluaran</CardTitle>
+                <TrendingDown className="w-4 h-4 text-rose-500" />
+              </CardHeader>
+              <CardContent className="px-4 pb-4">
+                <p className="text-xl font-bold text-rose-600 dark:text-rose-400">
+                  {formatRupiah(data.monthlyExpense)}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-1 pt-4 px-4">
+                <CardTitle className="text-xs font-medium text-muted-foreground">Laba Bersih</CardTitle>
+                <Wallet className="w-4 h-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent className="px-4 pb-4">
+                <p className={cn("text-xl font-bold", data.netProfit >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
+                  {formatRupiah(data.netProfit)}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
+      )}
 
       <Suspense fallback={<Skeleton className="h-64 w-full" />}>
         <DashboardCharts productionData={data.productionChart} />
       </Suspense>
 
-      {data.activeCoops.length > 0 && (
+      {data.activeCoops.length > 0 && isOwner && (
         <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">

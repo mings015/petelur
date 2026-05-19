@@ -36,6 +36,7 @@ import {
   expenseCategories,
   expenses,
   incomes,
+  taskTemplates,
 } from "../src/db/schema";
 
 // ─── DB & Supabase clients ────────────────────────────────────────────────────
@@ -124,12 +125,16 @@ async function seedUsers() {
         email: OWNER_EMAIL,
         fullName: "Pak Budi (Owner)",
         role: "owner",
+        isActive: true,
       },
       {
         id: workerId,
         email: WORKER_EMAIL,
         fullName: "Pak Agus (Pekerja)",
         role: "worker",
+        phone: "081234567890",
+        isActive: true,
+        joinedAt: daysAgo(90),
       },
     ])
     .onConflictDoNothing();
@@ -681,6 +686,25 @@ async function seedSalesData(ownerId: string) {
   console.log(`  ✓ ${expenseRows.length} transaksi pengeluaran`);
 }
 
+// ─── Seed task templates ──────────────────────────────────────────────────────
+
+async function seedTaskTemplates(ownerId: string) {
+  console.log("→ Membuat template tugas harian...");
+
+  await db
+    .insert(taskTemplates)
+    .values([
+      { title: "Kumpulkan telur pagi", description: "Kumpulkan telur dari semua kandang aktif", sortOrder: 1, createdBy: ownerId, updatedBy: ownerId },
+      { title: "Beri pakan sesi 1", description: "Pemberian pakan pagi hari", sortOrder: 2, createdBy: ownerId, updatedBy: ownerId },
+      { title: "Bersihkan kandang", description: "Bersihkan kotoran dan sekam kandang", sortOrder: 3, createdBy: ownerId, updatedBy: ownerId },
+      { title: "Catat produksi harian", description: "Input data produksi telur ke sistem", sortOrder: 4, createdBy: ownerId, updatedBy: ownerId },
+      { title: "Periksa kondisi ayam", description: "Cek kesehatan dan tingkah laku ayam", sortOrder: 5, createdBy: ownerId, updatedBy: ownerId },
+    ])
+    .onConflictDoNothing();
+
+  console.log("  ✓ 5 template tugas harian dibuat");
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -695,6 +719,7 @@ async function main() {
     await seedHealthRecords(coopList, ownerId);
     await seedVaccinations(coopList, ownerId);
     await seedSalesData(ownerId);
+    await seedTaskTemplates(ownerId);
 
     console.log("\n✅ Seeding selesai!\n");
     console.log("─────────────────────────────────────");

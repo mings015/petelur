@@ -1,0 +1,35 @@
+PHASE 6 — Notification System
+Estimasi: 3–5 hari
+MODULE 13 — WhatsApp / Telegram Notification
+Alerts
+stok pakan habis
+produksi turun
+mortalitas tinggi
+Deliverables
+
+✅ WhatsApp alerts
+✅ Telegram bot integration
+
+PHASE 7 — AI & Smart Analytics
+Estimasi: 2–4 minggu
+
+Ini fase advanced.
+
+MODULE 14 — AI Analytics
+Predictions
+prediksi produksi
+estimasi pakan
+deteksi performa turun
+Insights
+efisiensi kandang
+stres ayam
+performa kandang
+Kemungkinan Tech Tambahan
+Python service
+ML model
+cron analytics
+Deliverables
+
+✅ AI insights
+✅ Forecasting
+✅ Smart recommendation system

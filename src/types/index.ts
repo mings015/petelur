@@ -14,6 +14,10 @@ import type {
   expenseCategories,
   expenses,
   incomes,
+  taskTemplates,
+  taskLogs,
+  reports,
+  reportSchedules,
 } from "@/db/schema";
 
 export type UserRole = "owner" | "worker";
@@ -37,6 +41,13 @@ export type EggSale = InferSelectModel<typeof eggSales>;
 export type ExpenseCategory = InferSelectModel<typeof expenseCategories>;
 export type Expense = InferSelectModel<typeof expenses>;
 export type Income = InferSelectModel<typeof incomes>;
+export type TaskTemplate = InferSelectModel<typeof taskTemplates>;
+export type TaskLog = InferSelectModel<typeof taskLogs>;
+export type Report = InferSelectModel<typeof reports>;
+export type ReportSchedule = InferSelectModel<typeof reportSchedules>;
+export type ReportType = "production" | "feed" | "health" | "vaccination" | "population";
+export type ReportFormat = "xlsx" | "pdf";
+export type ReportFrequency = "daily" | "weekly" | "monthly";
 
 export type ActionResult<T = void> =
   | { success: true; data: T }

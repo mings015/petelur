@@ -10,6 +10,7 @@ import {
   date,
   boolean,
   index,
+  unique,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -33,6 +34,16 @@ export const feedTransactionTypeEnum = pgEnum("feed_transaction_type", [
 ]);
 export const paymentMethodEnum = pgEnum("payment_method", ["tunai", "transfer"]);
 export const incomeTypeEnum = pgEnum("income_type", ["egg_sale", "manual"]);
+export const reportTypeEnum = pgEnum("report_type", [
+  "production",
+  "feed",
+  "health",
+  "vaccination",
+  "population",
+]);
+export const reportFormatEnum = pgEnum("report_format", ["xlsx", "pdf"]);
+export const reportStatusEnum = pgEnum("report_status", ["pending", "completed", "failed"]);
+export const reportFrequencyEnum = pgEnum("report_frequency", ["daily", "weekly", "monthly"]);
 
 // ─── Audit helper ─────────────────────────────────────────────────────────────
 
@@ -54,6 +65,9 @@ export const users = pgTable("users", {
   email: varchar("email", { length: 255 }).notNull().unique(),
   fullName: varchar("full_name", { length: 255 }).notNull(),
   role: userRoleEnum("role").notNull().default("worker"),
+  phone: varchar("phone", { length: 30 }),
+  isActive: boolean("is_active").notNull().default(true),
+  joinedAt: date("joined_at"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -263,6 +277,66 @@ export const incomes = pgTable("incomes", {
   index("idx_incomes_source_id").on(t.sourceId),
 ]);
 
+export const taskTemplates = pgTable("task_templates", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  ...auditFields,
+});
+
+export const taskLogs = pgTable("task_logs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  templateId: uuid("template_id")
+    .notNull()
+    .references(() => taskTemplates.id, { onDelete: "cascade" }),
+  userId: uuid("user_id").notNull(),
+  logDate: date("log_date").notNull(),
+  completedAt: timestamp("completed_at", { withTimezone: true }).notNull().defaultNow(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index("idx_task_logs_template_id").on(t.templateId),
+  index("idx_task_logs_user_date").on(t.userId, t.logDate),
+  unique("uq_task_log").on(t.templateId, t.userId, t.logDate),
+]);
+
+export const reports = pgTable("reports", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  type: reportTypeEnum("type").notNull(),
+  format: reportFormatEnum("format").notNull(),
+  status: reportStatusEnum("status").notNull().default("pending"),
+  periodStart: date("period_start").notNull(),
+  periodEnd: date("period_end").notNull(),
+  coopId: uuid("coop_id").references(() => coops.id, { onDelete: "set null" }),
+  storagePath: text("storage_path"),
+  generatedAt: timestamp("generated_at", { withTimezone: true }),
+  generatedBy: uuid("generated_by").notNull(),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index("idx_reports_generated_by").on(t.generatedBy),
+  index("idx_reports_generated_at").on(t.generatedAt),
+  index("idx_reports_type").on(t.type),
+]);
+
+export const reportSchedules = pgTable("report_schedules", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  type: reportTypeEnum("type").notNull(),
+  frequency: reportFrequencyEnum("frequency").notNull(),
+  format: reportFormatEnum("format").notNull().default("xlsx"),
+  coopId: uuid("coop_id").references(() => coops.id, { onDelete: "set null" }),
+  isActive: boolean("is_active").notNull().default(true),
+  lastRun: timestamp("last_run", { withTimezone: true }),
+  nextRun: timestamp("next_run", { withTimezone: true }).notNull(),
+  createdBy: uuid("created_by").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index("idx_report_schedules_next_run").on(t.nextRun),
+]);
+
 // ─── Relations ────────────────────────────────────────────────────────────────
 
 export const coopsRelations = relations(coops, ({ many }) => ({
@@ -346,5 +420,16 @@ export const expensesRelations = relations(expenses, ({ one }) => ({
   category: one(expenseCategories, {
     fields: [expenses.categoryId],
     references: [expenseCategories.id],
+  }),
+}));
+
+export const taskTemplatesRelations = relations(taskTemplates, ({ many }) => ({
+  logs: many(taskLogs),
+}));
+
+export const taskLogsRelations = relations(taskLogs, ({ one }) => ({
+  template: one(taskTemplates, {
+    fields: [taskLogs.templateId],
+    references: [taskTemplates.id],
   }),
 }));
