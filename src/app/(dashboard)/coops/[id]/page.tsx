@@ -122,14 +122,14 @@ export default async function CoopDetailPage({ params }: CoopDetailPageProps) {
             Belum ada riwayat perubahan populasi.
           </p>
         ) : (
-          <div className="rounded-xl border overflow-hidden">
-            <table className="w-full text-sm">
+          <div className="rounded-xl border overflow-x-auto">
+            <table className="w-full text-sm min-w-[420px]">
               <thead className="bg-muted/50">
                 <tr>
                   <th className="text-left px-4 py-3 font-medium">Tanggal</th>
                   <th className="text-left px-4 py-3 font-medium">Jenis</th>
                   <th className="text-right px-4 py-3 font-medium">Jumlah</th>
-                  <th className="text-left px-4 py-3 font-medium hidden sm:table-cell">
+                  <th className="text-left px-4 py-3 font-medium">
                     Keterangan
                   </th>
                 </tr>
@@ -150,7 +150,7 @@ export default async function CoopDetailPage({ params }: CoopDetailPageProps) {
                     <td className="px-4 py-3 text-right font-medium">
                       {pop.count.toLocaleString("id-ID")}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
+                    <td className="px-4 py-3 text-muted-foreground">
                       {pop.reason ?? "-"}
                     </td>
                   </tr>

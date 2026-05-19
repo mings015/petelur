@@ -48,15 +48,15 @@ export function FinanceTransactionTable({ transactions }: FinanceTransactionTabl
   }
 
   return (
-    <div className="rounded-xl border overflow-hidden">
-      <table className="w-full text-sm">
+    <div className="rounded-xl border overflow-x-auto">
+      <table className="w-full text-sm min-w-[580px]">
         <thead className="bg-muted/50">
           <tr>
             <th className="text-left px-4 py-3 font-medium">Tanggal</th>
             <th className="text-left px-4 py-3 font-medium">Jenis</th>
-            <th className="text-left px-4 py-3 font-medium hidden sm:table-cell">Deskripsi</th>
+            <th className="text-left px-4 py-3 font-medium">Deskripsi</th>
             <th className="text-right px-4 py-3 font-medium">Jumlah</th>
-            <th className="text-left px-4 py-3 font-medium hidden md:table-cell">Metode</th>
+            <th className="text-left px-4 py-3 font-medium">Metode</th>
             <th className="px-4 py-3" />
           </tr>
         </thead>
@@ -95,13 +95,13 @@ export function FinanceTransactionTable({ transactions }: FinanceTransactionTabl
                     {kindLabel[row.kind]}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell truncate max-w-[200px]">
+                <td className="px-4 py-3 text-muted-foreground truncate max-w-[200px]">
                   {description}
                 </td>
                 <td className="px-4 py-3 text-right font-medium">
                   {formatRupiah(row.amount)}
                 </td>
-                <td className="px-4 py-3 text-muted-foreground hidden md:table-cell capitalize">
+                <td className="px-4 py-3 text-muted-foreground capitalize">
                   {row.paymentMethod}
                 </td>
                 <td className="px-4 py-3 text-right">

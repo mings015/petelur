@@ -51,14 +51,14 @@ export function SalesTable({ sales }: SalesTableProps) {
           {sales.length === 0 ? "Belum ada data penjualan." : "Tidak ada hasil yang sesuai."}
         </p>
       ) : (
-        <div className="rounded-xl border overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="rounded-xl border overflow-x-auto">
+          <table className="w-full text-sm min-w-[640px]">
             <thead className="bg-muted/50">
               <tr>
                 <th className="text-left px-4 py-3 font-medium">Tanggal</th>
-                <th className="text-left px-4 py-3 font-medium hidden sm:table-cell">Pelanggan</th>
+                <th className="text-left px-4 py-3 font-medium">Pelanggan</th>
                 <th className="text-left px-4 py-3 font-medium">Kategori</th>
-                <th className="text-right px-4 py-3 font-medium hidden md:table-cell">Jumlah</th>
+                <th className="text-right px-4 py-3 font-medium">Jumlah</th>
                 <th className="text-right px-4 py-3 font-medium">Total</th>
                 <th className="px-4 py-3" />
               </tr>
@@ -73,11 +73,11 @@ export function SalesTable({ sales }: SalesTableProps) {
                       year: "numeric",
                     })}
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
+                  <td className="px-4 py-3 text-muted-foreground">
                     {sale.customerName ?? "—"}
                   </td>
                   <td className="px-4 py-3">{sale.categoryName}</td>
-                  <td className="px-4 py-3 text-right hidden md:table-cell">
+                  <td className="px-4 py-3 text-right">
                     {parseFloat(sale.quantity).toLocaleString("id-ID")} {sale.unit}
                   </td>
                   <td className="px-4 py-3 text-right font-medium">

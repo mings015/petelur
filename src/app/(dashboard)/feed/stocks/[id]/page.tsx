@@ -92,14 +92,14 @@ export default async function FeedStockDetailPage({ params }: FeedStockDetailPag
             Belum ada transaksi untuk pakan ini.
           </p>
         ) : (
-          <div className="rounded-xl border overflow-hidden">
-            <table className="w-full text-sm">
+          <div className="rounded-xl border overflow-x-auto">
+            <table className="w-full text-sm min-w-[420px]">
               <thead className="bg-muted/50">
                 <tr>
                   <th className="text-left px-4 py-3 font-medium">Tanggal</th>
                   <th className="text-left px-4 py-3 font-medium">Jenis</th>
                   <th className="text-right px-4 py-3 font-medium">Jumlah</th>
-                  <th className="text-left px-4 py-3 font-medium hidden sm:table-cell">
+                  <th className="text-left px-4 py-3 font-medium">
                     Info
                   </th>
                 </tr>
@@ -122,7 +122,7 @@ export default async function FeedStockDetailPage({ params }: FeedStockDetailPag
                     <td className="px-4 py-3 text-right font-medium">
                       {formatNumber(tx.quantity)} {stock.unit}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
+                    <td className="px-4 py-3 text-muted-foreground">
                       {tx.type === "purchase"
                         ? tx.supplier ?? "-"
                         : tx.coopName ?? "-"}

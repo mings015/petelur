@@ -69,7 +69,7 @@ export function ProductionTable({ data }: ProductionTableProps) {
       columnHelper.accessor("goodEggs", {
         header: "Telur Bagus",
         cell: (info) => (
-          <span className="tabular-nums hidden sm:table-cell">
+          <span className="tabular-nums">
             {info.getValue()}
           </span>
         ),
@@ -77,7 +77,7 @@ export function ProductionTable({ data }: ProductionTableProps) {
       columnHelper.accessor("crackedEggs", {
         header: "Retak",
         cell: (info) => (
-          <span className="tabular-nums hidden sm:table-cell">
+          <span className="tabular-nums">
             {info.getValue()}
           </span>
         ),
@@ -85,7 +85,7 @@ export function ProductionTable({ data }: ProductionTableProps) {
       columnHelper.accessor("brokenEggs", {
         header: "Rusak",
         cell: (info) => (
-          <span className="tabular-nums hidden sm:table-cell">
+          <span className="tabular-nums">
             {info.getValue()}
           </span>
         ),
@@ -125,7 +125,7 @@ export function ProductionTable({ data }: ProductionTableProps) {
 
       {/* Table */}
       <div className="overflow-x-auto rounded-lg border">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm min-w-[520px]">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr

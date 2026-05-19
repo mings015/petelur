@@ -40,13 +40,13 @@ export default async function CustomersPage() {
           </Link>
         </div>
       ) : (
-        <div className="rounded-xl border overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="rounded-xl border overflow-x-auto">
+          <table className="w-full text-sm min-w-[480px]">
             <thead className="bg-muted/50">
               <tr>
                 <th className="text-left px-4 py-3 font-medium">Nama</th>
-                <th className="text-left px-4 py-3 font-medium hidden sm:table-cell">Telepon</th>
-                <th className="text-left px-4 py-3 font-medium hidden md:table-cell">Alamat</th>
+                <th className="text-left px-4 py-3 font-medium">Telepon</th>
+                <th className="text-left px-4 py-3 font-medium">Alamat</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -54,10 +54,10 @@ export default async function CustomersPage() {
               {customers.map((customer) => (
                 <tr key={customer.id} className="hover:bg-muted/30 transition-colors">
                   <td className="px-4 py-3 font-medium">{customer.name}</td>
-                  <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
+                  <td className="px-4 py-3 text-muted-foreground">
                     {customer.phone ?? "—"}
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground hidden md:table-cell truncate max-w-[200px]">
+                  <td className="px-4 py-3 text-muted-foreground truncate max-w-[200px]">
                     {customer.address ?? "—"}
                   </td>
                   <td className="px-4 py-3 text-right">

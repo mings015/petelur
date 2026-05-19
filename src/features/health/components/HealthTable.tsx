@@ -79,7 +79,7 @@ const columns: ColumnDef<HealthRecordRow>[] = [
     accessorKey: "treatment",
     header: "Penanganan",
     cell: ({ getValue }) => (
-      <span className="text-sm hidden md:block">
+      <span className="text-sm">
         {getValue<string | null>() ?? (
           <span className="text-muted-foreground">-</span>
         )}
@@ -107,16 +107,14 @@ export function HealthTable({ data }: HealthTableProps) {
   return (
     <div className="space-y-3">
       <div className="overflow-x-auto rounded-lg border">
-        <table className="w-full text-left text-sm">
+        <table className="w-full text-left text-sm min-w-[560px]">
           <thead className="border-b bg-muted/50">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className={`px-4 py-3 font-medium text-muted-foreground ${
-                      header.column.id === "treatment" ? "hidden md:table-cell" : ""
-                    }`}
+                    className="px-4 py-3 font-medium text-muted-foreground"
                   >
                     {flexRender(
                       header.column.columnDef.header,
@@ -139,14 +137,12 @@ export function HealthTable({ data }: HealthTableProps) {
               </tr>
             ) : (
               table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="border-b last:border-0 hover:bg-muted/30">
+                <tr
+                  key={row.id}
+                  className="border-b last:border-0 hover:bg-muted/30"
+                >
                   {row.getVisibleCells().map((cell) => (
-                    <td
-                      key={cell.id}
-                      className={`px-4 py-3 ${
-                        cell.column.id === "treatment" ? "hidden md:table-cell" : ""
-                      }`}
-                    >
+                    <td key={cell.id} className="px-4 py-3">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext(),
