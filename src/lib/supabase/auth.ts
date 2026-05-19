@@ -21,13 +21,17 @@ export const getCurrentUser = cache(async () => {
   const authUser = await getSession();
   if (!authUser) return null;
 
-  const [user] = await db
-    .select()
-    .from(users)
-    .where(eq(users.id, authUser.id))
-    .limit(1);
-
-  return user ?? null;
+  try {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, authUser.id))
+      .limit(1);
+    return user ?? null;
+  } catch {
+    // DB timeout or connection error — treat as unauthenticated
+    return null;
+  }
 });
 
 export async function requireRole(role: UserRole) {

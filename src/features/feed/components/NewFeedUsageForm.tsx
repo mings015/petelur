@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { FeedUsageForm } from "./FeedUsageForm";
 import { recordFeedUsage } from "../actions";
+import { useOfflineSubmit } from "@/hooks/use-offline-submit";
 import type { FeedUsageInput } from "../schema";
 
 interface NewFeedUsageFormProps {
@@ -21,27 +22,29 @@ export function NewFeedUsageForm({ feedStocks, coops }: NewFeedUsageFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const { submitOrQueue } = useOfflineSubmit("feed_usage");
 
   async function handleSubmit(data: FeedUsageInput) {
     setIsLoading(true);
     setServerError(null);
 
-    const formData = new FormData();
-    formData.set("feedStockId", data.feedStockId);
-    formData.set("coopId", data.coopId);
-    formData.set("quantity", String(data.quantity));
-    formData.set("date", data.date);
-    if (data.notes) formData.set("notes", data.notes);
+    const payload: Record<string, string> = {
+      feedStockId: data.feedStockId,
+      coopId: data.coopId,
+      quantity: String(data.quantity),
+      date: data.date,
+    };
+    if (data.notes) payload.notes = data.notes;
 
-    const result = await recordFeedUsage(formData);
+    const result = await submitOrQueue(payload, recordFeedUsage);
     setIsLoading(false);
 
     if (!result.success) {
-      setServerError(result.error);
+      setServerError(result.error ?? "Gagal menyimpan");
       toast.error(result.error);
       return;
     }
-    toast.success("Pemakaian pakan berhasil dicatat");
+    if (!result.queued) toast.success("Pemakaian pakan berhasil dicatat");
     router.push("/feed");
   }
 

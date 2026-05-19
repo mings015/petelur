@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { SidebarNav, MobileNav } from "@/components/sidebar-nav";
 import { Toaster } from "@/components/ui/sonner";
+import { PwaProvider } from "@/components/pwa/pwa-provider";
 
 export default async function DashboardLayout({
   children,
@@ -12,14 +13,17 @@ export default async function DashboardLayout({
   if (!user) redirect("/login");
 
   return (
-    <div className="flex min-h-screen">
-      <div className="hidden md:flex">
-        <SidebarNav user={user} />
-      </div>
+    <div className="flex min-h-screen flex-col">
+      <PwaProvider />
+      <div className="flex flex-1 min-h-0">
+        <div className="hidden md:flex">
+          <SidebarNav user={user} />
+        </div>
 
-      <main className="flex-1 overflow-auto pb-16 md:pb-0">
-        {children}
-      </main>
+        <main className="flex-1 overflow-auto pb-16 md:pb-0">
+          {children}
+        </main>
+      </div>
 
       <div className="md:hidden">
         <MobileNav user={user} />

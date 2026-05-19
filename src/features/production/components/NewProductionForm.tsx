@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ProductionForm } from "./ProductionForm";
 import { createProduction } from "../actions";
+import { useOfflineSubmit } from "@/hooks/use-offline-submit";
 import type { CreateProductionInput } from "../schema";
 
 interface NewProductionFormProps {
@@ -15,37 +16,35 @@ export function NewProductionForm({ coops }: NewProductionFormProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { submitOrQueue } = useOfflineSubmit("production");
 
   async function handleSubmit(data: CreateProductionInput) {
     setIsLoading(true);
     setError(null);
 
-    const formData = new FormData();
-    formData.set("coopId", data.coopId);
-    formData.set("productionDate", data.productionDate);
-    formData.set("totalEggs", String(data.totalEggs));
-    formData.set("goodEggs", String(data.goodEggs));
-    formData.set("crackedEggs", String(data.crackedEggs ?? 0));
-    formData.set("brokenEggs", String(data.brokenEggs ?? 0));
-    formData.set("smallEggs", String(data.smallEggs ?? 0));
-    formData.set("largeEggs", String(data.largeEggs ?? 0));
-    if (data.weightKg !== undefined) {
-      formData.set("weightKg", String(data.weightKg));
-    }
-    if (data.notes) {
-      formData.set("notes", data.notes);
-    }
+    const payload: Record<string, string> = {
+      coopId: data.coopId,
+      productionDate: data.productionDate,
+      totalEggs: String(data.totalEggs),
+      goodEggs: String(data.goodEggs),
+      crackedEggs: String(data.crackedEggs ?? 0),
+      brokenEggs: String(data.brokenEggs ?? 0),
+      smallEggs: String(data.smallEggs ?? 0),
+      largeEggs: String(data.largeEggs ?? 0),
+    };
+    if (data.weightKg !== undefined) payload.weightKg = String(data.weightKg);
+    if (data.notes) payload.notes = data.notes;
 
-    const result = await createProduction(formData);
+    const result = await submitOrQueue(payload, createProduction);
 
     if (!result.success) {
-      setError(result.error);
+      setError(result.error ?? "Gagal menyimpan");
       toast.error(result.error);
       setIsLoading(false);
       return;
     }
 
-    toast.success("Data produksi berhasil dicatat");
+    if (!result.queued) toast.success("Data produksi berhasil dicatat");
     router.push("/production");
   }
 

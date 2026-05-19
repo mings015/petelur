@@ -5,6 +5,7 @@ import { login } from "./actions";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { AppLogo } from "@/components/common/app-logo";
 
 export default function LoginPage() {
   const [error, formAction, isPending] = useActionState(
@@ -18,11 +19,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm space-y-6">
-        <div className="text-center space-y-1">
-          <h1 className="text-2xl font-bold">Petelur</h1>
-          <p className="text-sm text-muted-foreground">
-            Sistem Manajemen Peternakan Ayam
-          </p>
+        <div className="flex flex-col items-center gap-2">
+          <AppLogo size="lg" />
         </div>
 
         <form action={formAction} className="space-y-4">
